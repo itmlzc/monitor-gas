@@ -13,6 +13,9 @@ export default function HomePage() {
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [confirmado, setConfirmado] = useState(false);
   const MAX_GAS = 400;
+  const [showEmergency, setShowEmergency] = useState(false);
+  const [emergencyLoading, setEmergencyLoading] = useState(false);
+
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
@@ -94,6 +97,8 @@ export default function HomePage() {
     timeStyle: "short",
   });
 
+
+
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-6 gap-6 bg-[#f3f4f6] text-gray-900">
       <h1 className="text-4xl font-bold tracking-tight">ITM | Monitor de Gas</h1>
@@ -128,6 +133,74 @@ export default function HomePage() {
         >
           Abrir
         </button>
+      )}
+
+      {/*  boton de emergencia manual */}
+
+      <button
+        onClick={() => setShowEmergency(!showEmergency)}
+        className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-xl font-semibold transition-all"
+      >
+        {showEmergency ? "Ocultar Control de Emergencia" : "Control de Emergencia"}
+      </button>
+
+      {showEmergency && (
+        <div className="flex flex-col items-center gap-4 mt-4">
+          <p className="text-sm text-gray-700">
+            ⚠️ Este panel permite controlar la válvula manualmente.
+          </p>
+          <button
+            onClick={async () => {
+              setEmergencyLoading(true);
+              try {
+                await fetch(
+                  "https://detector-gas-v2-default-rtdb.firebaseio.com/buzzer.json",
+                  {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(false),
+                  }
+                );
+                setBuzzerState(false);
+                alert("✅ Válvula cerrada manualmente.");
+              } catch {
+                alert("❌ Error al cerrar la válvula.");
+              } finally {
+                setEmergencyLoading(false);
+              }
+            }}
+            className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-xl font-semibold disabled:opacity-50"
+            disabled={emergencyLoading}
+          >
+            Cerrar válvula manualmente
+          </button>
+
+          <button
+            onClick={async () => {
+              setEmergencyLoading(true);
+              try {
+                await fetch(
+                  "https://detector-gas-v2-default-rtdb.firebaseio.com/buzzer.json",
+                  {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(true),
+                  }
+                );
+                setBuzzerState(true);
+                alert("✅ Válvula abierta manualmente.");
+              } catch {
+                alert("❌ Error al abrir la válvula.");
+              } finally {
+                setEmergencyLoading(false);
+              }
+            }}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-xl font-semibold disabled:opacity-50"
+            disabled={emergencyLoading}
+          >
+            Abrir válvula manualmente
+          </button>
+        </div>
       )}
 
       {showModal && (
